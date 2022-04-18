@@ -1,9 +1,26 @@
+require("dotenv").config();
 const hubspot = require("@hubspot/api-client");
 const hubspotClient = new hubspot.Client({
   apiKey: process.env.API_KEY,
 });
 
 const HubSpot = {
+
+  login(req,res){
+    // Build the auth URL
+    const authUrl =
+      'https://app.hubspot.com/oauth/authorize' +
+      `?client_id=${encodeURIComponent(process.env.HS_CLIENT_ID)}` +
+      `&scope=${encodeURIComponent(process.env.HS_SCOPES)}` +
+      `&redirect_uri=${encodeURIComponent(process.env.HS_REDIRECT_URI)}`;
+    // Redirect the user
+    return res.redirect(authUrl);
+  },
+  loginOauth(req,res){
+    if (req.query.code) {
+      console.log(req.query)
+    }
+  },
   async getContacts(req, res) {
     try {
       const limit = req.params.limit || 100;
