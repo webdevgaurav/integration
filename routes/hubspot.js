@@ -1,9 +1,14 @@
+const { RowsBatchApiRequestFactory } = require("@hubspot/api-client/lib/codegen/cms/hubdb/apis/RowsBatchApi");
 const express = require("express");
 const router = express.Router();
 
 const HubSpot = require("../services/HubSpot");
 
-router.post("/contact/", HubSpot.createContact);
+
+
+router.get("/login", HubSpot.login);
+router.get("/loginOauth", HubSpot.loginOauth);
+router.post("/contact", HubSpot.createContact);
 router.get("/contact/:id", HubSpot.getContactById);
 router.get("/contacts/:limit?", HubSpot.getContacts);
 router.get("/contact/email/:email", HubSpot.getContactByEmail);
