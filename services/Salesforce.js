@@ -18,7 +18,6 @@ const conn = new jsforce.Connection({
 const Salesforce= {
  async getContacts  (req, res) {
     try {
-      console.log("i am in get contacts");
       await conn.login(
         SF_USERNAME,
         SF_PASSWORD + SF_TOKEN,
@@ -56,7 +55,6 @@ const Salesforce= {
   async getContactById  (req, res) {
     try {
       const contactId = req.params.id;
-      console.log("i am in get contact by id");
       await conn.login(
         SF_USERNAME,
         SF_PASSWORD + SF_TOKEN,
@@ -80,7 +78,6 @@ const Salesforce= {
   async createContact  (req, res) {
     try {
       const createProperties = req.body;
-      console.log("i am in post contact");
       await conn.login(
         SF_USERNAME,
         SF_PASSWORD + SF_TOKEN,
@@ -104,7 +101,6 @@ const Salesforce= {
  async updateContact (req, res) {
     try {
       const updateProperties = req.body;
-      console.log("i am in put contact");
       await conn.login(
         SF_USERNAME,
         SF_PASSWORD + SF_TOKEN,
@@ -128,7 +124,6 @@ const Salesforce= {
   async deleteContact (req, res)  {
     try {
       const contactId = req.params.id;
-      console.log("i am in delete contact");
       await conn.login(
         SF_USERNAME,
         SF_PASSWORD + SF_TOKEN,
