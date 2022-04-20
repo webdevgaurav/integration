@@ -10,10 +10,14 @@
   "license": "ISC",
   "dependencies": {
     "@hubspot/api-client": "^6.0.1-beta4",
+    "@salesforce/plugin-org": "^1.11.2",
+    "axios": "^0.26.1",
+    "cookie-parser": "^1.4.6",
     "dotenv": "^16.0.0",
     "express": "^4.17.3",
-    "@salesforce/plugin-org": "^1.11.2",
-    "jsforce": "^1.11.0"
+    "express-session": "^1.17.2",
+    "jsforce": "^1.11.0",
+    "request-promise": "^4.2.6"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

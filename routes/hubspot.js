@@ -1,10 +1,7 @@
-const { RowsBatchApiRequestFactory } = require("@hubspot/api-client/lib/codegen/cms/hubdb/apis/RowsBatchApi");
 const express = require("express");
 const router = express.Router();
 
 const HubSpot = require("../services/HubSpot");
-
-
 
 router.get("/login", HubSpot.login);
 router.get("/loginOauth", HubSpot.loginOauth);

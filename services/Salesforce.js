@@ -25,10 +25,6 @@ const Salesforce= {
           if (err) {
             return console.error(err);
           }
-          // console.log("Access Token: " + conn.accessToken);
-          // console.log("Instance URL: " + conn.instanceUrl);
-          console.log("User ID: " + userInfo.id);
-          console.log("Org ID: " + userInfo.organizationId);
           conn.query(
             "SELECT Id, Name FROM Contact",
             function (error, response) {
@@ -36,12 +32,10 @@ const Salesforce= {
                 return console.error(error);
               }
               let contacts = [];
-              response.records.forEach((element) => {
+                response.records.forEach((element) => {
                 contacts.push(element);
               });
               console.log(contacts);
-
-              // res.json(contacts);
             }
           );
         }

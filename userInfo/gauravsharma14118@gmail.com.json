@@ -1,0 +1,30 @@
+{
+  "token": "CIf0lrCEMBIHAAEAQAAAARi_nrMKILy7jhUo1doyMhTmGKkeG0ysV7MiOe8v4GVR0RHMYTowAAAAQQAAAAAAAAAAAAAAAACAAAAAAAAAAAAAIAAAAAAA4AEAAAAAAAAAAAAAABACQhTAfd6FdC9qq3WvInE0brFSnBqXkUoDbmExUgBaAA",
+  "user": "gauravsharma14118@gmail.com",
+  "hub_domain": "TestHubspot-dev-21811007.com",
+  "scopes": [
+    "oauth",
+    "crm.objects.contacts.read",
+    "crm.objects.contacts.write"
+  ],
+  "scope_to_scope_group_pks": [
+    25,
+    31,
+    144,
+    222,
+    270,
+    271,
+    272,
+    273,
+    373,
+    378
+  ],
+  "trial_scopes": [],
+  "trial_scope_to_scope_group_pks": [],
+  "hub_id": 21811007,
+  "app_id": 830805,
+  "expires_in": 1799,
+  "user_id": 44277180,
+  "token_type": "access",
+  "created_at": "13:7:7"
+}
