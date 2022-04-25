@@ -6,6 +6,9 @@
     "test": "echo \"Error: no test specified\" && exit 1",
     "start": "nodemon app.js"
   },
+  "nodemonConfig": {
+    "ignore": ["storage/*"]
+},
   "author": "",
   "license": "ISC",
   "dependencies": {
