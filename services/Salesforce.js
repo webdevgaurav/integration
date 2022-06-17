@@ -1,6 +1,5 @@
 const jsforce = require('jsforce');
 
-const Common = require('../services/Common');
 const APIFeatures = require('./../utils/apiFeatures');
 const APIAuthentication = require('./../utils/APIAuthentication');
 const playbookData = require('./../utils/playbookData');
@@ -20,9 +19,12 @@ const oauth2 = new jsforce.OAuth2({
 });
 
 exports.login = catchAsync(async (req, res, next) => {
+  console.log(req.query.url);
   // const url = `https:://${req.params.domain}.playbook.ai/client/salesforce/callback`;
-  const url = 'http:://playbookai.loc/client/salesforce/callback';
+  
+  const url = req.query.url;
   req.session.url = url.toString();
+
   await res.redirect(oauth2.getAuthorizationUrl({}));
 });
 
@@ -31,35 +33,49 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
   if (!req.query.code) {
     return res.json('Not Authorized. <a href="/salesforce/login">Login</a>');
   }
+
   let conn = new jsforce.Connection({ oauth2: oauth2 });
+
   await conn.authorize(req.query.code);
+
   let response = await conn.identity(function (err, rets) {
     if(err){
       next(err);
     }
   });
-  req.session.email = response.email;
+
   await playbookData.sendPlaybookData(req.session.url, conn);
+
   return res.json({
     message: 'token sent to playbook',
   })
+
 });
 
 exports.getClientDetails = catchAsync(async (req, res, next) => {
-  console.log('SFLead');
-  console.log(req);
-  const conn = await APIAuthentication(req, res, oauth2);
+  console.log('Details');
+
+  let token = {
+    instanceUrl: req.query.instanceUrl,
+    accessToken: req.query.accessToken,
+    refreshToken: req.query.refreshToken,
+  };
+
+  const conn = await APIAuthentication(req, res, token, oauth2);
+
   const features = new APIFeatures(conn, req.query)
     .selectModel()
     .find()
     .sort()
     .paginate();
+
   await features.query.execute(function (err, rets) {
     if (!err) {
       return res.json(rets);
     }
     next(err);
   });
+
 });
 
 exports.createClient = catchAsync(async (req, res, next) => {

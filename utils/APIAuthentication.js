@@ -2,32 +2,31 @@ const fs = require('fs');
 const jsforce = require('jsforce');
 const playbookData = require('./../utils/playbookData');
 
-module.exports = async function (req, res, oauth2) {
+module.exports = async function (req, res, token, oauth2) {
   return new Promise((resolve, reject)=>{
+
     if (!req.session.email) {
-      return res.send('Not Authorized Please . <a href="/salesforce/login">LOGIN</a>');
+      return res.send('Not Authorized. <a href="/salesforce/login">Login</a>');
     } else {
-      let userFile = fs.readFileSync(
-        `./storage/salesforce/${req.session.email}.json`
-      );
-      userFile = JSON.parse(userFile);
+
       const conn = new jsforce.Connection({
         oauth2: oauth2,
-        instanceUrl: userFile.instanceUrl,
-        accessToken: userFile.access_token,
-        refreshToken: userFile.refreshToken,
+        instanceUrl: token.instanceUrl,
+        accessToken: token.accessToken,
+        refreshToken: token.refreshToken,
       });
+
       conn.on('refresh', async function (accessToken, res) {
-        let access_token = userFile.access_token;
-        if (access_token != accessToken) {
+
+        if (token.accessToken != accessToken) {
           console.log('Inside refresh token');
-          // await playbookData.sendPlaybookData(req.session.url, data);
-          userFile.access_token = accessToken;
-          userFile = JSON.stringify(userFile, null, 2);
-          fs.writeFileSync(`./storage/salesforce/${email}.json`, userFile);
+          await playbookData.sendPlaybookData(req.session.url, conn, accessToken);
         }
+
       });
+
       resolve(conn);
+
     }
   })
 };
