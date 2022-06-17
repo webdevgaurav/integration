@@ -6,7 +6,7 @@ class APIFeatures {
 
   selectModel() {
     let model = this.queryString.model;
-    model = model.toLowerCase().replace(/\b(\w)/g, (s) => s.toUpperCase());
+    model = model.toLowerCase()[0].toUpperCase() + model.substring(1);
     this.query = this.query.sobject(model);
     return this;
   }

@@ -77,19 +77,6 @@ const Common = {
     }
   },
 
-  async saveSFUserInfo(conn, response) {
-    let userInfo = {};
-    const email = response.email;
-    let currentDateTime = new Date();
-    let tokenCreatedAt = currentDateTime.getTime() / 1000;
-    userInfo.email = email;
-    userInfo.instanceUrl = conn.instanceUrl;
-    userInfo.access_token = conn.accessToken;
-    userInfo.refreshToken = conn.refreshToken;
-    userInfo.created_at = tokenCreatedAt;
-    userInfo = JSON.stringify(userInfo, null, 2);
-    fs.writeFileSync(`./storage/salesforce/${email}.json`, userInfo);
-  },
 };
 
 module.exports = Common;

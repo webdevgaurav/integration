@@ -1,15 +1,16 @@
 const axios = require('axios');
 
-exports.sendPlaybookData = async function (url, conn, newAccessToken) {
+exports.sendPlaybookData = async function (url, conn) {
   return new Promise((resolve, reject)=>{
-      
+      console.log(url);
       let token = {
           instanceUrl : conn.instanceUrl,
-          accessToken : newAccessToken || conn.accessToken,
+          accessToken : conn.accessToken,
           refreshToken : conn.refreshToken,
         };
-        
-        resolve(axios.post('http:://playbookai.loc/client/salesforce/callback',  token ));
+
+        let response = axios.post('http:://playbookai.loc/client/salesforce/callback',  token )
+        resolve(response);
 
   })
 };

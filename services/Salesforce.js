@@ -23,7 +23,7 @@ exports.login = catchAsync(async (req, res, next) => {
   // const url = `https:://${req.params.domain}.playbook.ai/client/salesforce/callback`;
   
   const url = req.query.url;
-  req.session.url = url.toString();
+  req.session.url = url;
 
   await res.redirect(oauth2.getAuthorizationUrl({}));
 });
@@ -43,7 +43,8 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
       next(err);
     }
   });
-
+  
+  req.session.email = response.email;
   await playbookData.sendPlaybookData(req.session.url, conn);
 
   return res.json({
@@ -53,15 +54,8 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
 });
 
 exports.getClientDetails = catchAsync(async (req, res, next) => {
-  console.log('Details');
 
-  let token = {
-    instanceUrl: req.query.instanceUrl,
-    accessToken: req.query.accessToken,
-    refreshToken: req.query.refreshToken,
-  };
-
-  const conn = await APIAuthentication(req, res, token, oauth2);
+  const conn = await APIAuthentication(req, res, oauth2);
 
   const features = new APIFeatures(conn, req.query)
     .selectModel()
