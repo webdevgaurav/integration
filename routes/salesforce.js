@@ -10,8 +10,8 @@ router
   .route('/')
   .get(salesforce.getClientDetails)
   .post(salesforce.createClient)
-  .delete(salesforce.deleteClient)
-  .put(salesforce.updateClient);
+  .put(salesforce.updateClient)
+  .delete(salesforce.deleteClient);
 
 router.get('/logout', salesforce.logout);
 

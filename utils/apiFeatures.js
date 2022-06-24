@@ -1,3 +1,5 @@
+const jsforce = require('jsforce');
+
 class APIFeatures {
   constructor(query, queryString) {
     this.query = query;
@@ -12,10 +14,16 @@ class APIFeatures {
   }
 
   find() {
-    if (this.queryString.id) {
+    if (this.queryString.startdate && this.queryString.enddate) {
+      this.query = this.query.find({ $and: [{ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startdate) } }, { CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.enddate) } }] });
+    } else if (this.queryString.id) {
       this.query = this.query.find({ Id: { $eq: this.queryString.id } });
     } else if (this.queryString.email) {
       this.query = this.query.find({ Email: { $eq: this.queryString.email } });
+    } else if (this.queryString.startdate) {
+      this.query = this.query.find({ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startdate) } });
+    } else if (this.queryString.enddate) {
+      this.query = this.query.find({ CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.enddate) } });
     } else {
       this.query = this.query.find({});
     }

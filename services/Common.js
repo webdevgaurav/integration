@@ -44,37 +44,12 @@ const Common = {
     });
   },
 
-  async saveUserInfo(tokenData, email) {
+  async responseFile(data) {
     return new Promise((resolve, reject) => {
-    let currentDateTime = new Date();
-    let tokenCreatedAt = currentDateTime.getTime() / 1000;
-    tokenData.email = email;
-    tokenData.created_at = tokenCreatedAt;
-    tokenData = JSON.stringify(tokenData, null, 2);
-    fs.writeFileSync(`./storage/hubspot/${email}.json`, tokenData);
+      data = JSON.stringify(data, null, 2);
+      fs.writeFileSync('./storage/data.json', data);
+      resolve();
     })
-  },
-
-  async compareTime(tokenData, email) {
-    let currentDateTime = new Date();
-    let currentTime = currentDateTime.getTime() / 1000;
-    let tokenCreateTime = tokenData.created_at;
-    let expireIn = tokenCreateTime + Number(tokenData.expires_in);
-    if (currentTime > expireIn) {
-      await Common.getAccessToken(
-        'refresh_token',
-        tokenData.refresh_token
-      ).then((tokendata) => {
-        Common.saveUserInfo(tokendata, email);
-      });
-      let refreshAccessToken = fs.readFileSync(
-        `./storage/hubspot/${email}.json`
-      );
-      refreshAccessToken = JSON.parse(refreshAccessToken);
-      return refreshAccessToken.access_token;
-    } else {
-      return tokenData.access_token;
-    }
   },
 
 };

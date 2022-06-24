@@ -19,9 +19,8 @@ const oauth2 = new jsforce.OAuth2({
 });
 
 exports.login = catchAsync(async (req, res, next) => {
-  console.log(req.query.url);
   // const url = `https:://${req.params.domain}.playbook.ai/client/salesforce/callback`;
-  
+
   const url = req.query.url;
   req.session.url = url;
 
@@ -29,7 +28,6 @@ exports.login = catchAsync(async (req, res, next) => {
 });
 
 exports.loginOauth = catchAsync(async (req, res, next) => {
-  console.log('salesforce API');
   if (!req.query.code) {
     return res.json('Not Authorized. <a href="/salesforce/login">Login</a>');
   }
@@ -39,12 +37,11 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
   await conn.authorize(req.query.code);
 
   let response = await conn.identity(function (err, rets) {
-    if(err){
+    if (err) {
       next(err);
     }
   });
-  
-  req.session.email = response.email;
+
   await playbookData.sendPlaybookData(req.session.url, conn);
 
   return res.json({
@@ -54,9 +51,7 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
 });
 
 exports.getClientDetails = catchAsync(async (req, res, next) => {
-
-  const conn = await APIAuthentication(req, res, oauth2);
-
+  const conn = await APIAuthentication.sfAuthentication(req, res, oauth2);
   const features = new APIFeatures(conn, req.query)
     .selectModel()
     .find()
@@ -79,7 +74,7 @@ exports.createClient = catchAsync(async (req, res, next) => {
       return res.send('WhoId is required for creating a task');
     }
   }
-  const conn = await APIAuthentication(req, res, oauth2);
+  const conn = await APIAuthentication.sfAuthentication(req, res, oauth2);
   const features = new APIFeatures(conn, req.query).selectModel();
   await features.query.create(createProperties, function (err, rets) {
     if (!err) {
@@ -91,7 +86,7 @@ exports.createClient = catchAsync(async (req, res, next) => {
 
 exports.updateClient = catchAsync(async (req, res, next) => {
   const updateProperties = req.body;
-  const conn = await APIAuthentication(req, res, oauth2);
+  const conn = await APIAuthentication.sfAuthentication(req, res, oauth2);
   const features = new APIFeatures(conn, req.query).selectModel().find();
   await features.query.update(updateProperties, function (err, rets) {
     if (!err) {
@@ -102,7 +97,7 @@ exports.updateClient = catchAsync(async (req, res, next) => {
 });
 
 exports.deleteClient = catchAsync(async (req, res, next) => {
-  const conn = await APIAuthentication(req, res, oauth2);
+  const conn = await APIAuthentication.sfAuthentication(req, res, oauth2);
   const features = new APIFeatures(conn, req.query).selectModel().find();
   await features.query.destroy(function (err, rets) {
     if (!err || rets) {
@@ -113,7 +108,7 @@ exports.deleteClient = catchAsync(async (req, res, next) => {
 });
 
 exports.logout = catchAsync(async (req, res, next) => {
-  const conn = await APIAuthentication(req, res, oauth2);
+  const conn = await APIAuthentication.sfAuthentication(req, res, oauth2);
   conn.logout(function (err) {
     if (!err) {
       req.session.destroy();

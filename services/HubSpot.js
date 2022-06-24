@@ -1,93 +1,73 @@
 const fs = require('fs');
-const Common = require('../services/Common');
-const hubspot = require('@hubspot/api-client');
 
+const hubspot = require('@hubspot/api-client');
 const hubspotClient = new hubspot.Client();
 
-const validation = async function (req, res) {
-  if (!req.headers.accessid) {
-    let fileExists = fs.existsSync(
-      `./storage/hubspot/${req.session.email}.json`
-    );
-    if (!fileExists) {
-      return res.send('Not Authorized. <a href="/hubspot/login">Login</a>');
-    }
-  }
-  if (!req.session.email) {
+const Common = require('../services/Common');
+const APIAuthentication = require('./../utils/APIAuthentication');
+const playbookData = require('./../utils/playbookData');
+const catchAsync = require('./../utils/catchAsync');
+
+const {
+  HS_CLIENT_ID,
+  HS_CLIENT_SECRET,
+  HS_SCOPES,
+  HS_REDIRECT_URI,
+} = process.env;
+
+exports.login = catchAsync(async (req, res) => {
+  req.session.url = req.query.url;
+  const authUrl = `https://app.hubspot.com/oauth/authorize?client_id=${encodeURIComponent(
+    HS_CLIENT_ID
+  )}&scope=${encodeURIComponent(
+    HS_SCOPES
+  )}&redirect_uri=${encodeURIComponent(HS_REDIRECT_URI)}`;
+  return res.redirect(authUrl);
+});
+
+exports.loginOauth = catchAsync(async (req, res) => {
+  if (!req.query.code) {
     return res.send('Not Authorized. <a href="/hubspot/login">Login</a>');
-  } else {
-    let tokenData = fs.readFileSync(
-      `./storage/hubspot/${req.session.email}.json`
+  };
+
+  let token = await Common.getAccessToken(
+    'authorization_code',
+    req.query.code
+  );
+  if (!token.access_token) {
+    return res.send(
+      `${token.message} <a href="/hubspot/login">Login</a>`
     );
-    tokenData = JSON.parse(tokenData);
-    let accesstoken = await Common.compareTime(tokenData, req.session.email);
-  }
-};
+  };
 
-const HubSpot = {
-  login(req, res) {
-    const authUrl = `https://app.hubspot.com/oauth/authorize?client_id=${encodeURIComponent(
-      process.env.HS_CLIENT_ID
-    )}&scope=${encodeURIComponent(
-      process.env.HS_SCOPES
-    )}&redirect_uri=${encodeURIComponent(process.env.HS_REDIRECT_URI)}`;
-    return res.redirect(authUrl);
-  },
+  let userData = await Common.getUserInfo(token.access_token);
+  if (!userData.user) {
+    return res.send(`${userData.message} <a href="/hubspot/login">Login</a>`);
+  };
 
-  async loginOauth(req, res) {
-    if (!req.query.code) {
-      return res.send('Not Authorized. <a href="/hubspot/login">Login</a>');
-    }
-    let tokenData = await Common.getAccessToken(
-      'authorization_code',
-      req.query.code
-    );
-    if (!tokenData.access_token) {
-      return res.send(
-        `${tokenData.message} <a href="/hubspot/login">Login</a>`
-      );
-    }
-    let userData = await Common.getUserInfo(tokenData.access_token);
-    if (!userData.user) {
-      return res.send(`${userData.message} <a href="/hubspot/login">Login</a>`);
-    }
-    Common.saveUserInfo(tokenData, userData.user);
-    req.session.email = userData.user;
-    req.session.accessToken = tokenData.access_token;
-    return res.redirect('/hubspot/contacts');
-  },
+  await playbookData.HSsendPlaybookData(req.session.url, token);
 
-  async getContacts(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
-      const limit = req.params.limit || 100;
-      const response = await hubspotClient.crm.contacts.basicApi.getPage(limit);
-      let contacts = response.results || [];
-      return res.send(contacts);
-    } catch (e) {
-      return res.send('ERROR ' + e);
-    }
-  },
+  return res.json({
+    message: 'token sent to playbook',
+  })
 
-  async getContactById(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
-      const contactId = req.params.id;
-      const response = await hubspotClient.crm.contacts.basicApi.getById(
+});
+
+exports.getClientDetails = catchAsync(async (req, res) => {
+  try {
+    const accesstoken = await APIAuthentication.hsAuthentication(req, res);
+    hubspotClient.setAccessToken(accesstoken);
+
+    const limit = req.query.limit || 100;
+    const after = req.query.after || 1301;
+    let data;
+    if (req.query.id) {
+      const contactId = req.query.id;
+      let response = await hubspotClient.crm.contacts.basicApi.getById(
         contactId
       );
-      res.send(response);
-    } catch (e) {
-      return res.send('ERROR ' + e);
-    }
-  },
-
-  async getContactByEmail(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
+      data = response;
+    } else if (req.query.email) {
       const search = {
         filterGroups: [
           {
@@ -95,65 +75,71 @@ const HubSpot = {
               {
                 operator: 'EQ',
                 propertyName: 'email',
-                value: req.params.email,
+                value: req.query.email,
               },
             ],
           },
         ],
       };
-      const response = await hubspotClient.crm.contacts.searchApi.doSearch(
+      let response = await hubspotClient.crm.contacts.searchApi.doSearch(
         search
       );
-      let contacts = response.results[0] || {};
-      res.send(contacts);
-    } catch (e) {
-      return res.send('ERROR ' + e);
+      data = response.results[0] || [];
+    } else {
+      let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after);
+      data = response.results || [];
     }
-  },
 
-  async createContact(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
-      const properties = { properties: req.body };
-      const response = await hubspotClient.crm.contacts.basicApi.create(
-        properties
-      );
-      res.send(response);
-    } catch (e) {
-      return res.send('ERROR ' + e);
-    }
-  },
+    // await Common.responseFile(data);
+    // const rstream = fs.createReadStream('./storage/hubspot/data.json');
+    // rstream.pipe(res);
 
-  async updateContact(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
-      const contactId = req.params.id;
-      const properties = { properties: req.body };
-      const response = await hubspotClient.crm.contacts.basicApi.update(
-        contactId,
-        properties
-      );
-      res.send(response);
-    } catch (e) {
-      return res.send('ERROR ' + e);
-    }
-  },
+    return res.json(data);
+  } catch (e) {
+    return res.json({ 'ERROR ': e });
+  }
+});
 
-  async deleteContact(req, res) {
-    const accesstoken = await validation(req, res);
-    try {
-      hubspotClient.setAccessToken(accesstoken);
-      const contactId = req.params.id;
-      const response = await hubspotClient.crm.contacts.basicApi.archive(
-        contactId
-      );
-      res.send(`success`);
-    } catch (e) {
-      return res.send('ERROR ' + e);
-    }
-  },
-};
+exports.createClient = catchAsync(async (req, res) => {
+  const accesstoken = await APIAuthentication.hsAuthentication(req, res);
+  try {
+    hubspotClient.setAccessToken(accesstoken);
+    const properties = { properties: req.body };
+    const response = await hubspotClient.crm.contacts.basicApi.create(
+      properties
+    );
+    return res.send(response);
+  } catch (e) {
+    return res.send('ERROR ' + e);
+  }
+});
 
-module.exports = HubSpot;
+exports.updateClient = catchAsync(async (req, res) => {
+  const accesstoken = await APIAuthentication.hsAuthentication(req, res);
+  try {
+    hubspotClient.setAccessToken(accesstoken);
+    const contactId = req.query.id;
+    const properties = { properties: req.body };
+    const response = await hubspotClient.crm.contacts.basicApi.update(
+      contactId,
+      properties
+    );
+    return res.send(response);
+  } catch (e) {
+    return res.send('ERROR ' + e);
+  }
+});
+
+exports.deleteClient = catchAsync(async (req, res) => {
+  const accesstoken = await APIAuthentication.hsAuthentication(req, res);
+  try {
+    hubspotClient.setAccessToken(accesstoken);
+    const contactId = req.query.id;
+    const response = await hubspotClient.crm.contacts.basicApi.archive(
+      contactId
+    );
+    return res.send(response);
+  } catch (e) {
+    return res.send('ERROR ' + e);
+  }
+});
