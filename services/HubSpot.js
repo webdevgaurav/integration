@@ -59,7 +59,9 @@ exports.getClientDetails = catchAsync(async (req, res) => {
     hubspotClient.setAccessToken(accesstoken);
 
     const limit = req.query.limit || 100;
-    const after = req.query.after || 1301;
+    // const page = req.query.page || 1;
+    let after = req.query.lastId || undefined;
+
     let data;
     if (req.query.id) {
       const contactId = req.query.id;
@@ -67,32 +69,62 @@ exports.getClientDetails = catchAsync(async (req, res) => {
         contactId
       );
       data = response;
+
     } else if (req.query.email) {
+      const filter = { propertyName: 'email', operator: 'EQ', value: req.query.email };
+      const filterGroup = { filters: [filter] };
       const search = {
-        filterGroups: [
-          {
-            filters: [
-              {
-                operator: 'EQ',
-                propertyName: 'email',
-                value: req.query.email,
-              },
-            ],
-          },
-        ],
+        filterGroups: [filterGroup],
       };
       let response = await hubspotClient.crm.contacts.searchApi.doSearch(
         search
       );
       data = response.results[0] || [];
+
+    } else if (req.query.startDate || req.query.endDate) {
+      let date = req.query.startDate;
+      let operator = 'GTE';
+
+      if (req.query.endDate) {
+        date = req.query.endDate;
+        operator = 'LTE';
+      };
+
+      const myDate = new Date(date);
+      const createdate = myDate.getTime();
+      const filter = { propertyName: 'createdate', operator: operator, value: createdate };
+
+      const filterGroup = { filters: [filter] };
+      const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' });
+      const properties = ['createdate', 'firstname', 'lastname'];
+      const search = {
+        filterGroups: [filterGroup],
+        sorts: [sort],
+        properties,
+        limit,
+      };
+
+      let response = await hubspotClient.crm.contacts.searchApi.doSearch(
+        search
+      );
+
+      data = response.results || [];
+
     } else {
       let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after);
       data = response.results || [];
     }
-
-    // await Common.responseFile(data);
-    // const rstream = fs.createReadStream('./storage/hubspot/data.json');
-    // rstream.pipe(res);
+    // let result = [];
+    // if (page > 1) {
+    //   let lastId = Number(data[data.length - 1].id) + 1;
+    //   if (lastId) {
+    //     req.query.lastId = lastId;
+    //     result = [...data];
+    //     this.getClientDetails(req, res);
+    //   };
+    //   data = result;
+    // }
+    // console.log(data);
 
     return res.json(data);
   } catch (e) {

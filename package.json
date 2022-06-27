@@ -23,7 +23,6 @@
     "express": "^4.17.3",
     "express-session": "^1.17.2",
     "jsforce": "^1.11.0",
-    "ndb": "^1.1.5",
     "request-promise": "^4.2.6"
   },
   "devDependencies": {

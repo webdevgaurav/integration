@@ -1,4 +1,3 @@
-const fs = require('fs');
 const request = require('request-promise');
 
 const Common = {
@@ -42,14 +41,6 @@ const Common = {
         }
       );
     });
-  },
-
-  async responseFile(data) {
-    return new Promise((resolve, reject) => {
-      data = JSON.stringify(data, null, 2);
-      fs.writeFileSync('./storage/data.json', data);
-      resolve();
-    })
   },
 
 };

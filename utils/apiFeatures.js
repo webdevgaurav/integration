@@ -14,18 +14,24 @@ class APIFeatures {
   }
 
   find() {
-    if (this.queryString.startdate && this.queryString.enddate) {
-      this.query = this.query.find({ $and: [{ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startdate) } }, { CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.enddate) } }] });
+    if (this.queryString.startDate && this.queryString.endDate) {
+      this.query = this.query.find({ $and: [{ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startDate) } }, { CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.endDate) } }] });
+
     } else if (this.queryString.id) {
       this.query = this.query.find({ Id: { $eq: this.queryString.id } });
+
     } else if (this.queryString.email) {
       this.query = this.query.find({ Email: { $eq: this.queryString.email } });
-    } else if (this.queryString.startdate) {
-      this.query = this.query.find({ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startdate) } });
-    } else if (this.queryString.enddate) {
-      this.query = this.query.find({ CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.enddate) } });
+
+    } else if (this.queryString.startDate) {
+      this.query = this.query.find({ CreatedDate: { $gte: jsforce.SfDate.toDateTimeLiteral(this.queryString.startDate) } });
+
+    } else if (this.queryString.endDate) {
+      this.query = this.query.find({ CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.endDate) } });
+
     } else {
       this.query = this.query.find({});
+
     }
     return this;
   }
