@@ -70,60 +70,39 @@ exports.getClientDetails = catchAsync(async (req, res) => {
       );
       data = response;
 
-    } else if (req.query.email) {
-      const filter = { propertyName: 'email', operator: 'EQ', value: req.query.email };
-      const filterGroup = { filters: [filter] };
-      const search = {
-        filterGroups: [filterGroup],
-      };
-      let response = await hubspotClient.crm.contacts.searchApi.doSearch(
-        search
-      );
-      data = response.results[0] || [];
-
-    } else if (req.query.startDate && req.query.endDate) {
+    } else if ((req.query.startDate && req.query.endDate) || (req.query.startDate || req.query.endDate) || req.query.email) {
       let startDate = req.query.startDate;
       let endDate = req.query.endDate;
+      let filter = [];
 
-      const start_date = new Date(startDate);
-      const end_date = new Date(endDate);
-      startDate = start_date.getTime();
-      endDate = end_date.getTime();
+      if (startDate && endDate) {
+        const start_date = new Date(startDate);
+        const end_date = new Date(endDate);
+        startDate = start_date.getTime();
+        endDate = end_date.getTime();
 
-      const filter = [{ propertyName: 'createdate', operator: 'GTE', value: startDate }, { propertyName: 'createdate', operator: 'LTE', value: endDate }];
+        filter = [{ propertyName: 'createdate', operator: 'GTE', value: startDate }, { propertyName: 'createdate', operator: 'LTE', value: endDate }];
+
+      } else if (startDate || endDate) {
+        let date = req.query.startDate;
+        let operator = 'GTE';
+
+        if (req.query.endDate) {
+          date = req.query.endDate;
+          operator = 'LTE';
+        };
+
+        const myDate = new Date(date);
+        const createdate = myDate.getTime();
+        filter = [{ propertyName: 'createdate', operator: operator, value: createdate }];
+
+      } else if (req.query.email) {
+        filter = [{ propertyName: 'email', operator: 'EQ', value: req.query.email }];
+      }
 
       const filterGroup = { filters: filter };
       const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' });
-      const properties = ['createdate', 'firstname', 'lastname'];
-      const search = {
-        filterGroups: [filterGroup],
-        sorts: [sort],
-        properties,
-        limit,
-      };
-
-      let response = await hubspotClient.crm.contacts.searchApi.doSearch(
-        search
-      );
-
-      data = response.results || [];
-
-    } else if (req.query.startDate || req.query.endDate) {
-      let date = req.query.startDate;
-      let operator = 'GTE';
-
-      if (req.query.endDate) {
-        date = req.query.endDate;
-        operator = 'LTE';
-      };
-
-      const myDate = new Date(date);
-      const createdate = myDate.getTime();
-      const filter = { propertyName: 'createdate', operator: operator, value: createdate };
-
-      const filterGroup = { filters: [filter] };
-      const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' });
-      const properties = ['createdate', 'firstname', 'lastname'];
+      const properties = ['createdate', 'firstname', 'lastname', 'email'];
       const search = {
         filterGroups: [filterGroup],
         sorts: [sort],
