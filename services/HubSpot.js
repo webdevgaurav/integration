@@ -102,7 +102,7 @@ exports.getClientDetails = catchAsync(async (req, res) => {
 
       const filterGroup = { filters: filter };
       const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' });
-      const properties = ['createdate', 'firstname', 'lastname', 'email'];
+      const properties = ['createdate', 'firstname', 'lastname', 'email', 'hs_lead_status'];
       const search = {
         filterGroups: [filterGroup],
         sorts: [sort],
@@ -117,7 +117,8 @@ exports.getClientDetails = catchAsync(async (req, res) => {
       data = response.results || [];
 
     } else {
-      let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after);
+      const properties = ['createdate', 'firstname', 'lastname', 'email', 'hs_lead_status', 'lastmodifieddate'];
+      let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after, properties);
       data = response.results || [];
     }
     // let result = [];
