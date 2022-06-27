@@ -81,6 +81,33 @@ exports.getClientDetails = catchAsync(async (req, res) => {
       );
       data = response.results[0] || [];
 
+    } else if (req.query.startDate && req.query.endDate) {
+      let startDate = req.query.startDate;
+      let endDate = req.query.endDate;
+
+      const start_date = new Date(startDate);
+      const end_date = new Date(endDate);
+      startDate = start_date.getTime();
+      endDate = end_date.getTime();
+
+      const filter = [{ propertyName: 'createdate', operator: 'GTE', value: startDate }, { propertyName: 'createdate', operator: 'LTE', value: endDate }];
+
+      const filterGroup = { filters: filter };
+      const sort = JSON.stringify({ propertyName: 'createdate', direction: 'DESCENDING' });
+      const properties = ['createdate', 'firstname', 'lastname'];
+      const search = {
+        filterGroups: [filterGroup],
+        sorts: [sort],
+        properties,
+        limit,
+      };
+
+      let response = await hubspotClient.crm.contacts.searchApi.doSearch(
+        search
+      );
+
+      data = response.results || [];
+
     } else if (req.query.startDate || req.query.endDate) {
       let date = req.query.startDate;
       let operator = 'GTE';
