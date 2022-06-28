@@ -58,11 +58,10 @@ exports.getClientDetails = catchAsync(async (req, res) => {
     const accesstoken = await APIAuthentication.hsAuthentication(req, res);
     hubspotClient.setAccessToken(accesstoken);
 
-    const limit = req.query.limit || 100;
-    // const page = req.query.page || 1;
-    let after = req.query.lastId || undefined;
-
+    let limit = req.query.limit || 100;
+    let after = req.query.after || undefined;
     let data;
+
     if (req.query.id) {
       const contactId = req.query.id;
       let response = await hubspotClient.crm.contacts.basicApi.getById(
@@ -117,25 +116,14 @@ exports.getClientDetails = catchAsync(async (req, res) => {
       data = response.results || [];
 
     } else {
-      const properties = ['createdate', 'firstname', 'lastname', 'email', 'hs_lead_status', 'lastmodifieddate'];
+      const properties = ['createdate', 'firstname', 'lastname', 'email', 'hs_lead_status', 'lastmodifieddate', 'phone'];
       let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after, properties);
       data = response.results || [];
     }
-    // let result = [];
-    // if (page > 1) {
-    //   let lastId = Number(data[data.length - 1].id) + 1;
-    //   if (lastId) {
-    //     req.query.lastId = lastId;
-    //     result = [...data];
-    //     this.getClientDetails(req, res);
-    //   };
-    //   data = result;
-    // }
-    // console.log(data);
 
     return res.json(data);
   } catch (e) {
-    return res.json({ 'ERROR ': e });
+    return res.json({ 'ERROR': e });
   }
 });
 
@@ -147,9 +135,9 @@ exports.createClient = catchAsync(async (req, res) => {
     const response = await hubspotClient.crm.contacts.basicApi.create(
       properties
     );
-    return res.send(response);
+    return res.json(response);
   } catch (e) {
-    return res.send('ERROR ' + e);
+    return res.json({ 'ERROR': e });
   }
 });
 
@@ -163,9 +151,9 @@ exports.updateClient = catchAsync(async (req, res) => {
       contactId,
       properties
     );
-    return res.send(response);
+    return res.json(response);
   } catch (e) {
-    return res.send('ERROR ' + e);
+    return res.json({ 'ERROR': e });
   }
 });
 
@@ -174,11 +162,11 @@ exports.deleteClient = catchAsync(async (req, res) => {
   try {
     hubspotClient.setAccessToken(accesstoken);
     const contactId = req.query.id;
-    const response = await hubspotClient.crm.contacts.basicApi.archive(
+    await hubspotClient.crm.contacts.basicApi.archive(
       contactId
     );
-    return res.send(response);
+    return res.json(contactId + ' Deleted Successfully');
   } catch (e) {
-    return res.send('ERROR ' + e);
+    return res.json({ 'ERROR': e });
   }
 });
