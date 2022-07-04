@@ -2,6 +2,8 @@ const fs = require('fs');
 
 const hubspot = require('@hubspot/api-client');
 const hubspotClient = new hubspot.Client();
+var LocalStorage = require('node-localstorage').LocalStorage;
+localStorage = new LocalStorage('./scratch');
 
 const Common = require('../services/Common');
 const APIAuthentication = require('./../utils/APIAuthentication');
@@ -58,9 +60,9 @@ exports.getClientDetails = catchAsync(async (req, res) => {
     const accesstoken = await APIAuthentication.hsAuthentication(req, res);
     hubspotClient.setAccessToken(accesstoken);
 
+    let data;
     let limit = req.query.limit || 100;
     let after = req.query.after || undefined;
-    let data;
 
     if (req.query.id) {
       const contactId = req.query.id;
@@ -107,6 +109,7 @@ exports.getClientDetails = catchAsync(async (req, res) => {
         sorts: [sort],
         properties,
         limit,
+        after,
       };
 
       let response = await hubspotClient.crm.contacts.searchApi.doSearch(
@@ -118,7 +121,17 @@ exports.getClientDetails = catchAsync(async (req, res) => {
     } else {
       const properties = ['createdate', 'firstname', 'lastname', 'email', 'hs_lead_status', 'lastmodifieddate', 'phone'];
       let response = await hubspotClient.crm.contacts.basicApi.getPage(limit, after, properties);
-      data = response.results || [];
+      let results = response.results || [];
+
+      let nextId = Number(results[results.length - 1].id) + 1;
+
+      data = {
+        data: results,
+        paging: {
+          next: String(nextId),
+        }
+      };
+
     }
 
     return res.json(data);

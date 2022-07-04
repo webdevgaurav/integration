@@ -23,6 +23,7 @@
     "express": "^4.17.3",
     "express-session": "^1.17.2",
     "jsforce": "^1.11.0",
+    "node-localstorage": "^2.2.1",
     "request-promise": "^4.2.6"
   },
   "devDependencies": {
