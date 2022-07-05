@@ -2,8 +2,6 @@ const fs = require('fs');
 
 const hubspot = require('@hubspot/api-client');
 const hubspotClient = new hubspot.Client();
-var LocalStorage = require('node-localstorage').LocalStorage;
-localStorage = new LocalStorage('./scratch');
 
 const Common = require('../services/Common');
 const APIAuthentication = require('./../utils/APIAuthentication');
