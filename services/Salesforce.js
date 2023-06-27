@@ -42,11 +42,14 @@ exports.loginOauth = catchAsync(async (req, res, next) => {
     }
   });
 
-  await playbookData.sendPlaybookData(req.session.url, conn);
+  url = req.session.url + '?instanceUrl=' + conn.instanceUrl + '&accessToken=' + conn.accessToken + '&refreshToken=' + conn.refreshToken;
+  res.redirect(url);
+  
+  // await playbookData.sendPlaybookData(req.session.url, conn);
 
-  return res.json({
-    message: 'token sent to playbook',
-  })
+  // return res.json({
+  //   message: 'token sent to playbook',
+  // })
 
 });
 
