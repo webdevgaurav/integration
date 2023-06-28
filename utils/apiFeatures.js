@@ -29,6 +29,9 @@ class APIFeatures {
     } else if (this.queryString.endDate) {
       this.query = this.query.find({ CreatedDate: { $lte: jsforce.SfDate.toDateTimeLiteral(this.queryString.endDate) } });
 
+    } else if (this.queryString.WhoId) {
+      this.query = this.query.find({ WhoId: { $eq: this.queryString.WhoId } });
+
     } else {
       this.query = this.query.find({});
 
